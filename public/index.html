@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Neural Assistant — Local Demo</title>
+    <style>
+      body { font-family: sans-serif; max-width: 720px; margin: 40px auto; }
+      #log { border: 1px solid #ccc; padding: 12px; min-height: 220px; white-space: pre-wrap; }
+      textarea { width: 100%; height: 80px; margin-top: 8px; }
+      button { padding: 8px 14px; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>🧠 Neural Assistant</h1>
+    <div id="log">👋 Ready. Type a message and click Send.</div>
+    <textarea id="msg" placeholder="Ask me something..."></textarea><br />
+    <button id="send">Send</button>
+
+    <script>
+      const log = document.getElementById("log");
+      const msg = document.getElementById("msg");
+      const btn = document.getElementById("send");
+
+      function add(role, text) {
+        log.textContent += `\n${role}: ${text}`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      btn.onclick = async () => {
+        const content = msg.value.trim();
+        if (!content) return;
+        add("You", content);
+        msg.value = "";
+        try {
+          const r = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: content })
+          });
+          const data = await r.json();
+          add(data.mode === "offline" ? "Assistant (offline)" : "Assistant", data.reply);
+        } catch {
+          add("System", "❌ Error contacting server.");
+        }
+      };
+    </script>
+  </body>
+</html>
